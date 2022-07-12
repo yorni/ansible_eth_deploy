@@ -1,0 +1,9 @@
+---
+- hosts: geth_servers
+  become: yes
+  roles:
+    - common
+    - firewall
+    - geth
+  tags:
+    - geth

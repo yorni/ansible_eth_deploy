@@ -1,0 +1,39 @@
+---
+- name: reset rules
+  ufw:
+    state: reset
+
+- name: Ufw deny incoming
+  ufw:
+    direction: incoming
+    proto: any
+    policy: deny
+  notify:
+    - reload ufw
+
+- name: Ufw allow outgoing
+  ufw:
+    direction: outgoing
+    proto: any
+    policy: allow
+  notify:
+    - reload ufw
+
+- name: Ufw allow limit ssh
+  ufw:
+    rule: limit
+    name: OpenSSH
+  notify:
+    - reload ufw
+
+- name: Allow geth p2p port
+  ufw:
+    rule: allow
+    port: "{{ geth_port }}"
+    proto: tcp
+  notify:
+    - reload ufw
+
+- name: Enable ufw service
+  ufw:
+    state: enabled

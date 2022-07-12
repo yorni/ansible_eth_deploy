@@ -1,0 +1,99 @@
+---
+- name: Create ether user
+  user:
+    name: "{{ geth_user }}"
+
+- name: Creates directory
+  file:
+    path: "{{ service_dir }}"
+    state: directory
+    owner: "{{ geth_user }}"
+    group: "{{ geth_user }}"
+    mode: 0775
+    recurse: yes
+
+- name: Create geth extraction dir
+  become_user: "{{ geth_user }}"
+  file:
+    path: "{{ service_dir }}/build/geth"
+    owner: "{{ geth_user }}"
+    group: "{{ geth_user }}"
+    state: directory
+    recurse: yes
+
+- name: download geth
+  become_user: "{{ geth_user }}"
+  get_url:
+    url: "https://gethstore.blob.core.windows.net/builds/{{ geth_build }}.tar.gz"
+    dest: "{{ service_dir }}/build/{{ geth_build }}.tar.gz"
+    mode: 0644
+
+- name: extract geth tarball
+  become_user: "{{ geth_user }}"
+  unarchive:
+    remote_src: yes
+    src: "{{ service_dir }}/build/{{ geth_build }}.tar.gz"
+    dest: "{{ service_dir }}/build/"
+
+- name: create .local/bin
+  become_user: "{{ geth_user }}"
+  file:
+    path: "{{ service_dir }}/.local/bin"
+    owner: "{{ geth_user }}"
+    group: "{{ geth_user }}"
+    state: directory
+
+- name: ensure geth service stopped before copy
+  shell: "systemctl stop geth"
+  ignore_errors: yes
+
+- name: put geth executable in .local/bin
+  become_user: "{{ geth_user }}"
+  shell: "cp {{ service_dir }}/build/{{ geth_build }}/geth {{ service_dir }}/.local/bin/geth"
+
+- name: update ether's environment
+  become_user: "{{ geth_user }}"
+  script: "../files/addpath.sh {{ service_dir }}/.local/bin"
+
+- name: create geth directory
+  file:
+    state: directory
+    path: "{{ service_dir }}/.ethereum_data"
+    owner: "{{ geth_user }}"
+    group: "{{ geth_user }}"
+    mode: 0755
+
+- name: create geth logs directory
+  file:
+    state: directory
+    path: "{{ service_dir }}/logs"
+    owner: "{{ geth_user }}"
+    group: "{{ geth_user }}"
+    mode: 0755
+
+- name: install service file
+  template:
+    src: ../templates/geth.service
+    dest: "{{ service_dir }}/geth.service"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: symlink to service file
+  file:
+    state: link
+    path: /lib/systemd/system/geth.service
+    src: "{{ service_dir }}/geth.service"
+
+- name: reload systemd
+  shell: systemctl daemon-reload
+
+- name: restart geth service
+  service:
+    name: geth
+    state: restarted
+
+- name: Delete build directory
+  file:
+    state: absent
+    path: "{{ service_dir }}/build/"

@@ -1,0 +1,22 @@
+[Unit]
+Description=go-thereum client
+Requires=network.target
+
+[Service]
+Type=simple
+User={{ geth_user }} 
+Restart=on-failure
+ExecStart={{ service_dir }}/.local/bin/geth --datadir "{{ service_dir }}/.ethereum_data" \
+--cache {{ geth_cache }} {% if geth_testnet %} --testnet{% endif %} \
+{% if geth_port is defined %} --port {{ geth_port }}{% endif %} --maxpeers {{ geth_maxpeers }} \
+--maxpendpeers {{ geth_maxpendpeers }} {% if geth_rpc is defined and geth_rpc == true %} \
+--http --http.addr {{ geth_rpcaddr }} --http.port {{ geth_rpcport }} --http.api {{ geth_rpcapi }} \
+{% if geth_rpccorsdomain is defined %} --http.corsdomain "{{ geth_rpccorsdomain }}"{% endif %}{% endif %} \
+{% if influx_metrics_enabled %} --metrics --metrics.influxdb --metrics.influxdb.endpoint \
+"{{influx_endpoint}}" --metrics.influxdb.endpoint "{{influx_endpoint}}" \
+--metrics.influxdb.database "{{influx_database}}" --metrics.influxdb.username "{{influx_username}}" \
+--metrics.influxdb.password "{{influx_password}}"  {% endif %} 
+StandardOutput=append:{{ service_dir }}/logs/geth.log
+StandardError=append:{{ service_dir }}/logs/error.log
+[Install]
+WantedBy=default.target

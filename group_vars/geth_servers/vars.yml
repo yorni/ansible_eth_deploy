@@ -1,0 +1,22 @@
+---
+ansible_user: root
+ansible_ssh_private_key: /root/.ssh/id_rsa
+geth_user: geth
+geth_build: geth-linux-amd64-1.10.20-8f2416a8
+service_dir: /mnt/operational/geth_mainnet
+geth_cache: 512
+geth_port: 30303
+geth_rpc: true
+geth_rpcpublic: false
+geth_rpcaddr: 127.0.0.1
+geth_rpcport: 8545
+geth_rpcapi: "eth,net,web3"
+geth_rpccorsdomain: localhost
+geth_testnet: false
+geth_maxpeers: 25
+geth_maxpendpeers: 0
+influx_metrics_enabled: false
+influx_endpoint: http://localhost:8086
+influx_database: geth
+influx_username: test
+influx_password: test
